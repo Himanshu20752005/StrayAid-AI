@@ -1,0 +1,474 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Stray-Aid · Animal Detector</title>
+  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet"/>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:          #0d1117;
+      --surface:     #161b22;
+      --surface2:    #1c2128;
+      --border:      #21262d;
+      --amber:       #f0a500;
+      --amber-dim:   #b87800;
+      --green:       #3fb950;
+      --red:         #f85149;
+      --red-dim:     #6e2020;
+      --muted:       #8b949e;
+      --text:        #e6edf3;
+      --radius:      14px;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'DM Sans', sans-serif;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 40px 20px 60px;
+    }
+
+    /* ── Header ── */
+    header {
+      text-align: center;
+      margin-bottom: 48px;
+      animation: fadeDown .6s ease both;
+    }
+    .logo-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(240,165,0,.12);
+      border: 1px solid rgba(240,165,0,.3);
+      border-radius: 999px;
+      padding: 4px 14px;
+      font-size: .78rem;
+      font-weight: 500;
+      color: var(--amber);
+      letter-spacing: .06em;
+      text-transform: uppercase;
+      margin-bottom: 18px;
+    }
+    h1 {
+      font-family: 'Syne', sans-serif;
+      font-size: clamp(2rem, 5vw, 3.2rem);
+      font-weight: 800;
+      letter-spacing: -.02em;
+      line-height: 1.1;
+    }
+    h1 span { color: var(--amber); }
+    .subtitle {
+      margin-top: 10px;
+      color: var(--muted);
+      font-size: .95rem;
+      font-weight: 300;
+    }
+
+    /* ── Main card ── */
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      width: 100%;
+      max-width: 600px;
+      overflow: hidden;
+      animation: fadeUp .7s .1s ease both;
+    }
+
+    /* ── Drop zone ── */
+    #drop-zone {
+      padding: 52px 32px;
+      text-align: center;
+      cursor: pointer;
+      border-bottom: 1px solid var(--border);
+      transition: background .2s;
+      position: relative;
+    }
+    #drop-zone:hover, #drop-zone.drag-over { background: rgba(240,165,0,.05); }
+    #drop-zone input[type="file"] { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
+    .upload-icon { font-size: 2.8rem; margin-bottom: 14px; display: block; }
+    #drop-zone p { font-size: .9rem; color: var(--muted); }
+    #drop-zone strong { color: var(--amber); font-weight: 500; }
+    .file-types { margin-top: 6px; font-size: .75rem; color: #4c545e; }
+
+    /* ── Preview ── */
+    #preview-wrap { display: none; position: relative; }
+    #preview-img { width: 100%; max-height: 320px; object-fit: cover; display: block; }
+    #change-btn {
+      position: absolute; top: 12px; right: 12px;
+      background: rgba(13,17,23,.8);
+      border: 1px solid var(--border);
+      color: var(--text); border-radius: 8px;
+      padding: 5px 12px; font-size: .8rem;
+      cursor: pointer; transition: background .2s;
+    }
+    #change-btn:hover { background: rgba(240,165,0,.15); }
+
+    /* ── Analyse button ── */
+    .btn-row { padding: 20px 24px; border-bottom: 1px solid var(--border); }
+    #analyse-btn {
+      width: 100%;
+      background: var(--amber);
+      color: #0d1117;
+      border: none; border-radius: 9px;
+      padding: 13px;
+      font-family: 'Syne', sans-serif;
+      font-size: 1rem; font-weight: 700;
+      cursor: pointer; letter-spacing: .03em;
+      transition: background .2s, transform .1s;
+    }
+    #analyse-btn:disabled { background: #2d3139; color: var(--muted); cursor: not-allowed; }
+    #analyse-btn:not(:disabled):hover { background: #ffc234; transform: translateY(-1px); }
+    #analyse-btn:not(:disabled):active { transform: translateY(0); }
+
+    /* ── Spinner ── */
+    #spinner { display: none; padding: 28px; text-align: center; }
+    .spin {
+      width: 32px; height: 32px;
+      border: 3px solid var(--border);
+      border-top-color: var(--amber);
+      border-radius: 50%;
+      animation: spin .7s linear infinite;
+      margin: 0 auto 10px;
+    }
+    #spinner p { font-size: .85rem; color: var(--muted); }
+
+    /* ── Error ── */
+    #error-msg {
+      display: none;
+      margin: 16px 24px;
+      padding: 12px 16px;
+      background: rgba(248,81,73,.1);
+      border: 1px solid rgba(248,81,73,.3);
+      border-radius: 9px;
+      font-size: .85rem; color: var(--red);
+    }
+
+    /* ── Result panels ── */
+    .result-section {
+      padding: 24px 24px 0;
+      display: none;
+      animation: fadeUp .4s ease both;
+    }
+    .result-section:last-of-type { padding-bottom: 28px; }
+
+    .section-header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 16px;
+    }
+    .section-step {
+      width: 26px; height: 26px;
+      border-radius: 50%;
+      background: rgba(240,165,0,.15);
+      border: 1px solid rgba(240,165,0,.4);
+      font-size: .72rem;
+      font-weight: 700;
+      color: var(--amber);
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+    }
+    .section-title {
+      font-size: .72rem;
+      color: var(--muted);
+      text-transform: uppercase;
+      letter-spacing: .08em;
+    }
+
+    .result-animal-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 4px;
+    }
+    .result-animal-name {
+      font-family: 'Syne', sans-serif;
+      font-size: 2rem;
+      font-weight: 800;
+      color: var(--amber);
+      text-transform: capitalize;
+    }
+    .result-emoji { font-size: 1.8rem; }
+    .confidence-row { font-size: .88rem; color: var(--muted); margin-bottom: 20px; }
+    .confidence-row span { color: var(--green); font-weight: 500; }
+
+    /* disease name — healthy vs sick */
+    .disease-name {
+      font-family: 'Syne', sans-serif;
+      font-size: 1.7rem;
+      font-weight: 800;
+      text-transform: capitalize;
+      margin-bottom: 4px;
+    }
+    .disease-name.healthy { color: var(--green); }
+    .disease-name.sick    { color: var(--red); }
+
+    /* ── Divider between sections ── */
+    .section-divider {
+      height: 1px;
+      background: var(--border);
+      margin: 20px 24px 0;
+      display: none;
+    }
+
+    /* ── Breakdown bars ── */
+    .breakdown { margin-top: 8px; }
+    .breakdown-title {
+      font-size: .72rem; color: var(--muted);
+      text-transform: uppercase; letter-spacing: .08em;
+      margin-bottom: 12px;
+    }
+    .bar-row { display: flex; align-items: center; gap: 12px; margin-bottom: 10px; }
+    .bar-label { min-width: 120px; font-size: .78rem; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .bar-track { flex: 1; height: 6px; background: var(--border); border-radius: 99px; overflow: hidden; }
+    .bar-fill { height: 100%; border-radius: 99px; background: var(--amber-dim); transition: width .8s cubic-bezier(.4,0,.2,1); }
+    .bar-fill.top-animal  { background: var(--amber); }
+    .bar-fill.top-healthy { background: var(--green); }
+    .bar-fill.top-sick    { background: var(--red); }
+    .bar-pct { width: 44px; text-align: right; font-size: .78rem; color: var(--muted); }
+
+    /* ── Health badge ── */
+    .health-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 12px;
+      border-radius: 999px;
+      font-size: .78rem;
+      font-weight: 600;
+      letter-spacing: .04em;
+      margin-bottom: 6px;
+    }
+    .health-badge.healthy { background: rgba(63,185,80,.12); border: 1px solid rgba(63,185,80,.3); color: var(--green); }
+    .health-badge.sick    { background: rgba(248,81,73,.12); border: 1px solid rgba(248,81,73,.3); color: var(--red); }
+
+    /* ── Footer ── */
+    footer { margin-top: 36px; font-size: .78rem; color: #3c434d; }
+
+    /* ── Animations ── */
+    @keyframes fadeDown { from { opacity:0; transform:translateY(-18px); } to { opacity:1; transform:translateY(0); } }
+    @keyframes fadeUp   { from { opacity:0; transform:translateY(16px);  } to { opacity:1; transform:translateY(0); } }
+    @keyframes spin     { to { transform: rotate(360deg); } }
+  </style>
+</head>
+<body>
+
+<header>
+  <div class="logo-pill">🐾 Stray-Aid</div>
+  <h1>Animal <span>Detector</span></h1>
+  <p class="subtitle">Upload a photo — identify the animal &amp; detect possible diseases.</p>
+</header>
+
+<div class="card">
+
+  <!-- Drop zone -->
+  <div id="drop-zone">
+    <input type="file" id="file-input" accept="image/*" />
+    <span class="upload-icon">📷</span>
+    <p><strong>Click to upload</strong> or drag &amp; drop</p>
+    <p class="file-types">JPG · PNG · WEBP · up to 10 MB</p>
+  </div>
+
+  <!-- Preview -->
+  <div id="preview-wrap">
+    <img id="preview-img" alt="Preview" />
+    <button id="change-btn">✕ Change</button>
+  </div>
+
+  <!-- Analyse button -->
+  <div class="btn-row">
+    <button id="analyse-btn" disabled>Analyse Image</button>
+  </div>
+
+  <!-- Spinner -->
+  <div id="spinner">
+    <div class="spin"></div>
+    <p id="spinner-msg">Detecting animal…</p>
+  </div>
+
+  <!-- Error -->
+  <div id="error-msg"></div>
+
+  <!-- ── Step 1: Animal result ── -->
+  <div class="result-section" id="animal-panel">
+    <div class="section-header">
+      <div class="section-step">1</div>
+      <span class="section-title">Animal identified</span>
+    </div>
+    <div class="result-animal-row">
+      <span class="result-emoji" id="res-emoji"></span>
+      <span class="result-animal-name" id="res-animal"></span>
+    </div>
+    <p class="confidence-row">Confidence: <span id="res-animal-conf"></span>%</p>
+    <div class="breakdown">
+      <p class="breakdown-title">Animal probabilities</p>
+      <div id="animal-bar-container"></div>
+    </div>
+  </div>
+
+  <!-- Divider -->
+  <div class="section-divider" id="divider"></div>
+
+  <!-- ── Step 2: Disease result ── -->
+  <div class="result-section" id="disease-panel">
+    <div class="section-header">
+      <div class="section-step">2</div>
+      <span class="section-title">Disease screening</span>
+    </div>
+    <div class="health-badge" id="health-badge"></div>
+    <div class="disease-name" id="res-disease"></div>
+    <p class="confidence-row">Confidence: <span id="res-disease-conf"></span>%</p>
+    <div class="breakdown">
+      <p class="breakdown-title">Disease probabilities</p>
+      <div id="disease-bar-container"></div>
+    </div>
+  </div>
+
+</div>
+
+<footer>Stray-Aid · Local inference · No data stored</footer>
+
+<script>
+  const dropZone    = document.getElementById('drop-zone');
+  const fileInput   = document.getElementById('file-input');
+  const previewWrap = document.getElementById('preview-wrap');
+  const previewImg  = document.getElementById('preview-img');
+  const changeBtn   = document.getElementById('change-btn');
+  const analyseBtn  = document.getElementById('analyse-btn');
+  const spinner     = document.getElementById('spinner');
+  const spinnerMsg  = document.getElementById('spinner-msg');
+  const errorMsg    = document.getElementById('error-msg');
+
+  const EMOJIS = { cat: '🐱', dog: '🐶', cow: '🐄' };
+
+  let currentFile = null;
+
+  fileInput.addEventListener('change', e => handleFile(e.target.files[0]));
+
+  dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('drag-over'); });
+  dropZone.addEventListener('dragleave', () => dropZone.classList.remove('drag-over'));
+  dropZone.addEventListener('drop', e => {
+    e.preventDefault();
+    dropZone.classList.remove('drag-over');
+    if (e.dataTransfer.files[0]) handleFile(e.dataTransfer.files[0]);
+  });
+
+  changeBtn.addEventListener('click', () => {
+    previewWrap.style.display = 'none';
+    dropZone.style.display    = 'block';
+    analyseBtn.disabled       = true;
+    currentFile               = null;
+    fileInput.value           = '';
+    hideResults();
+  });
+
+  function handleFile(file) {
+    if (!file || !file.type.startsWith('image/')) return;
+    currentFile = file;
+    previewImg.src            = URL.createObjectURL(file);
+    dropZone.style.display    = 'none';
+    previewWrap.style.display = 'block';
+    analyseBtn.disabled       = false;
+    hideResults();
+  }
+
+  analyseBtn.addEventListener('click', async () => {
+    if (!currentFile) return;
+    hideResults();
+    spinner.style.display = 'block';
+    spinnerMsg.textContent = 'Detecting animal…';
+    analyseBtn.disabled   = true;
+
+    const fd = new FormData();
+    fd.append('file', currentFile);
+
+    try {
+      const res  = await fetch('/predict', { method: 'POST', body: fd });
+      const data = await res.json();
+
+      if (data.error) throw new Error(data.error);
+
+      spinnerMsg.textContent = 'Running disease model…';
+      // Small pause so spinner message is visible
+      await new Promise(r => setTimeout(r, 300));
+
+      showResults(data);
+    } catch (err) {
+      errorMsg.textContent   = '⚠ ' + err.message;
+      errorMsg.style.display = 'block';
+    } finally {
+      spinner.style.display = 'none';
+      analyseBtn.disabled   = false;
+    }
+  });
+
+  function showResults(data) {
+    // ── Animal panel ──
+    document.getElementById('res-emoji').textContent      = EMOJIS[data.animal] || '🐾';
+    document.getElementById('res-animal').textContent     = data.animal;
+    document.getElementById('res-animal-conf').textContent = data.animal_confidence;
+
+    buildBars('animal-bar-container', data.animal_breakdown, 'top-animal');
+    document.getElementById('animal-panel').style.display = 'block';
+
+    // ── Disease panel ──
+    if (data.disease) {
+      const d = data.disease;
+      const badge   = document.getElementById('health-badge');
+      const nameEl  = document.getElementById('res-disease');
+
+      badge.textContent = d.is_healthy ? '✓ Healthy' : '⚠ Disease Detected';
+      badge.className   = 'health-badge ' + (d.is_healthy ? 'healthy' : 'sick');
+
+      nameEl.textContent = d.disease;
+      nameEl.className   = 'disease-name ' + (d.is_healthy ? 'healthy' : 'sick');
+
+      document.getElementById('res-disease-conf').textContent = d.confidence;
+
+      const topClass = d.is_healthy ? 'top-healthy' : 'top-sick';
+      buildBars('disease-bar-container', d.breakdown, topClass);
+
+      document.getElementById('divider').style.display      = 'block';
+      document.getElementById('disease-panel').style.display = 'block';
+    }
+  }
+
+  function buildBars(containerId, breakdown, topClass) {
+    const container = document.getElementById(containerId);
+    container.innerHTML = '';
+    const sorted = Object.entries(breakdown).sort((a, b) => b[1] - a[1]);
+    sorted.forEach(([label, pct], i) => {
+      const row = document.createElement('div');
+      row.className = 'bar-row';
+      row.innerHTML = `
+        <span class="bar-label" title="${label}">${label}</span>
+        <div class="bar-track">
+          <div class="bar-fill ${i === 0 ? topClass : ''}" style="width:0%" data-pct="${pct}"></div>
+        </div>
+        <span class="bar-pct">${pct}%</span>`;
+      container.appendChild(row);
+    });
+
+    requestAnimationFrame(() => {
+      container.querySelectorAll('.bar-fill').forEach(el => {
+        el.style.width = el.dataset.pct + '%';
+      });
+    });
+  }
+
+  function hideResults() {
+    ['animal-panel', 'disease-panel', 'divider'].forEach(id => {
+      document.getElementById(id).style.display = 'none';
+    });
+    errorMsg.style.display = 'none';
+  }
+</script>
+</body>
+</html>
