@@ -1,5 +1,5 @@
 ## 🐾 StrayAid-AI
-#### An AI-powered Animal Disease Detection System using Deep Learning & Computer Vision
+#### An AI-powered Animal Dicease Detection System using Deep Learning & Computer Vision
 
 ---
 
