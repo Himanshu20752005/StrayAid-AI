@@ -1,4 +1,5 @@
 from flask import Flask, request, jsonify, render_template
+import os
 import torch
 import torch.nn as nn
 from torchvision import transforms, models
@@ -52,25 +53,41 @@ DISEASE_MODEL_PATHS = {
     "dog": "models/best_model_Dog.keras",
 }
 
-# ── Load animal classifier ─────────────────────────────────────
-def load_animal_model():
-    model = models.resnet18(pretrained=False)
+# ── Load animal classifier (lazy) ────────────────────────────
+_animal_model = None
+
+def get_animal_model():
+    global _animal_model
+    if _animal_model is not None:
+        return _animal_model
+    if not os.path.exists(ANIMAL_MODEL_PATH):
+        return None
+    model = models.resnet18(weights=None)
     model.fc = nn.Linear(model.fc.in_features, len(CLASS_NAMES))
     model.load_state_dict(torch.load(ANIMAL_MODEL_PATH, map_location=DEVICE))
     model.to(DEVICE)
     model.eval()
-    return model
+    _animal_model = model
+    print("[OK] Loaded animal classifier")
+    return _animal_model
 
-animal_model = load_animal_model()
+# ── Load disease models (lazy, on first predict) ─────────────
+_disease_models = {}
 
-# ── Load disease models (Keras) ────────────────────────────────
-disease_models = {}
-for animal, path in DISEASE_MODEL_PATHS.items():
+def get_disease_model(animal):
+    if animal in _disease_models:
+        return _disease_models[animal]
+    path = DISEASE_MODEL_PATHS.get(animal)
+    if not path or not os.path.exists(path):
+        return None
     try:
-        disease_models[animal] = tf.keras.models.load_model(path)
+        m = tf.keras.models.load_model(path)
+        _disease_models[animal] = m
         print(f"[OK] Loaded disease model for {animal}")
+        return m
     except Exception as e:
         print(f"[WARN] Could not load disease model for {animal}: {e}")
+        return None
 
 # ── Image transforms ───────────────────────────────────────────
 animal_transform = transforms.Compose([
@@ -94,6 +111,10 @@ def index():
 
 @app.route("/predict", methods=["POST"])
 def predict():
+    animal_model = get_animal_model()
+    if animal_model is None:
+        return jsonify({"error": f"Animal model not found. Please place 'animal_model.pth' in the '{os.path.abspath('models')}' folder."}), 503
+
     if "file" not in request.files:
         return jsonify({"error": "No file uploaded"}), 400
 
@@ -107,7 +128,7 @@ def predict():
 
         # ── Step 1: Animal classification ──────────────────────
         tensor = animal_transform(image).unsqueeze(0).to(DEVICE)
-        with torch.no_grad():
+        with torch.no_grad():  # type: ignore[attr-defined]
             outputs = animal_model(tensor)
             probs = torch.softmax(outputs, dim=1)[0]
             top_prob, top_idx = torch.max(probs, 0)
@@ -121,8 +142,8 @@ def predict():
 
         # ── Step 2: Disease detection ───────────────────────────
         disease_result = None
-        if animal in disease_models:
-            d_model = disease_models[animal]
+        d_model = get_disease_model(animal)
+        if d_model is not None:
             d_labels = DISEASE_CLASSES.get(animal, [])
 
             inp = preprocess_for_disease(image)
