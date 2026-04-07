@@ -1,474 +1,809 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Stray-Aid · Animal Detector</title>
-  <link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;700;800&family=DM+Sans:ital,wght@0,300;0,400;0,500;1,300&display=swap" rel="stylesheet"/>
-  <style>
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
+    />
+    <title>Stray-Aid Platform</title>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      :root {
+        --bg: #f5f6f8;
+        --text: #171a21;
+        --primary: #2b4570;
+        --pink-bg: #ffe4f0;
+        --pink-text: #b52a5a;
+        --yellow-bg: #ffedd1;
+        --yellow-text: #b57a17;
+        --green-bg: #e2fce9;
+        --green-text: #2f8c44;
+        --blue-bg: #dff0ff;
+        --blue-text: #246fb8;
+        --purple-bg: #f2e6fa;
+        --purple-text: #7b2fa6;
+      }
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+        font-family: "Outfit", sans-serif;
+      }
+      body {
+        background-color: var(--bg);
+        color: var(--text);
+        display: flex;
+        justify-content: center;
+      }
 
-    :root {
-      --bg:          #0d1117;
-      --surface:     #161b22;
-      --surface2:    #1c2128;
-      --border:      #21262d;
-      --amber:       #f0a500;
-      --amber-dim:   #b87800;
-      --green:       #3fb950;
-      --red:         #f85149;
-      --red-dim:     #6e2020;
-      --muted:       #8b949e;
-      --text:        #e6edf3;
-      --radius:      14px;
-    }
+      .app-container {
+        width: 100%;
+        max-width: 414px;
+        min-height: 100vh;
+        background: #ffffff;
+        position: relative;
+        padding-bottom: 90px;
+        box-shadow: 0 0 20px rgba(0, 0, 0, 0.05);
+      }
 
-    body {
-      background: var(--bg);
-      color: var(--text);
-      font-family: 'DM Sans', sans-serif;
-      min-height: 100vh;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      padding: 40px 20px 60px;
-    }
+      /* Status Bar Mock */
+      .status-bar {
+        height: 44px;
+        background: #4d4f6b;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 0 20px;
+        color: white;
+        font-size: 0.8rem;
+        border-radius: 0 0 20px 20px;
+        margin-bottom: 20px;
+      }
 
-    /* ── Header ── */
-    header {
-      text-align: center;
-      margin-bottom: 48px;
-      animation: fadeDown .6s ease both;
-    }
-    .logo-pill {
-      display: inline-flex;
-      align-items: center;
-      gap: 8px;
-      background: rgba(240,165,0,.12);
-      border: 1px solid rgba(240,165,0,.3);
-      border-radius: 999px;
-      padding: 4px 14px;
-      font-size: .78rem;
-      font-weight: 500;
-      color: var(--amber);
-      letter-spacing: .06em;
-      text-transform: uppercase;
-      margin-bottom: 18px;
-    }
-    h1 {
-      font-family: 'Syne', sans-serif;
-      font-size: clamp(2rem, 5vw, 3.2rem);
-      font-weight: 800;
-      letter-spacing: -.02em;
-      line-height: 1.1;
-    }
-    h1 span { color: var(--amber); }
-    .subtitle {
-      margin-top: 10px;
-      color: var(--muted);
-      font-size: .95rem;
-      font-weight: 300;
-    }
+      .section-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 0 20px 14px;
+      }
+      .section-header h2 {
+        font-size: 1.15rem;
+        font-weight: 700;
+        color: #000;
+      }
+      .section-header .see-all {
+        font-size: 0.85rem;
+        font-weight: 500;
+        color: #555;
+      }
 
-    /* ── Main card ── */
-    .card {
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      width: 100%;
-      max-width: 600px;
-      overflow: hidden;
-      animation: fadeUp .7s .1s ease both;
-    }
+      /* Strays card */
+      .stray-card {
+        margin: 0 20px 24px;
+        padding: 12px 16px;
+        border-radius: 12px;
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.04);
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        border: 1px solid #f0f0f0;
+      }
+      .stray-logo-wrapper {
+        width: 60px;
+        height: 60px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        background: #fff;
+      }
+      .stray-logo-wrapper img {
+        width: 100%;
+        border-radius: 50%;
+      }
+      .stray-info h3 {
+        font-size: 1.1rem;
+        font-weight: 700;
+        margin-bottom: 4px;
+      }
+      .stray-badge {
+        background: #11284d;
+        color: white;
+        padding: 3px 12px;
+        border-radius: 20px;
+        font-size: 0.7rem;
+        font-weight: 500;
+      }
 
-    /* ── Drop zone ── */
-    #drop-zone {
-      padding: 52px 32px;
-      text-align: center;
-      cursor: pointer;
-      border-bottom: 1px solid var(--border);
-      transition: background .2s;
-      position: relative;
-    }
-    #drop-zone:hover, #drop-zone.drag-over { background: rgba(240,165,0,.05); }
-    #drop-zone input[type="file"] { position: absolute; inset: 0; opacity: 0; cursor: pointer; }
-    .upload-icon { font-size: 2.8rem; margin-bottom: 14px; display: block; }
-    #drop-zone p { font-size: .9rem; color: var(--muted); }
-    #drop-zone strong { color: var(--amber); font-weight: 500; }
-    .file-types { margin-top: 6px; font-size: .75rem; color: #4c545e; }
+      /* Map */
+      .map-section {
+        margin: 0 20px 24px;
+        height: 160px;
+        border-radius: 16px;
+        position: relative;
+        background: #e0e0e0
+          url("https://images.unsplash.com/photo-1524661135-423995f22d0b?w=600&q=80")
+          center/cover;
+        display: flex;
+        align-items: flex-end;
+        justify-content: center;
+        padding-bottom: 16px;
+      }
+      .map-overlay {
+        position: absolute;
+        inset: 0;
+        border-radius: 16px;
+        background: linear-gradient(
+          to top,
+          rgba(255, 255, 255, 0.8),
+          rgba(255, 255, 255, 0.2) 60%
+        );
+      }
+      .nearby-btn {
+        position: relative;
+        z-index: 1;
+        background: rgba(255, 255, 255, 0.4);
+        backdrop-filter: blur(8px);
+        border: 1px solid rgba(255, 255, 255, 0.9);
+        padding: 10px 24px;
+        border-radius: 30px;
+        font-size: 0.95rem;
+        font-weight: 500;
+        color: #333;
+      }
 
-    /* ── Preview ── */
-    #preview-wrap { display: none; position: relative; }
-    #preview-img { width: 100%; max-height: 320px; object-fit: cover; display: block; }
-    #change-btn {
-      position: absolute; top: 12px; right: 12px;
-      background: rgba(13,17,23,.8);
-      border: 1px solid var(--border);
-      color: var(--text); border-radius: 8px;
-      padding: 5px 12px; font-size: .8rem;
-      cursor: pointer; transition: background .2s;
-    }
-    #change-btn:hover { background: rgba(240,165,0,.15); }
+      /* Services Grid */
+      .services-grid {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 12px;
+        padding: 0 20px;
+      }
+      .service-card {
+        border-radius: 12px;
+        padding: 14px;
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        cursor: pointer;
+        text-decoration: none;
+      }
+      .c-pink {
+        background: var(--pink-bg);
+      }
+      .c-yellow {
+        background: var(--yellow-bg);
+      }
+      .c-green {
+        background: var(--green-bg);
+      }
+      .c-blue {
+        background: var(--blue-bg);
+      }
+      .c-purple {
+        background: var(--purple-bg);
+      }
 
-    /* ── Analyse button ── */
-    .btn-row { padding: 20px 24px; border-bottom: 1px solid var(--border); }
-    #analyse-btn {
-      width: 100%;
-      background: var(--amber);
-      color: #0d1117;
-      border: none; border-radius: 9px;
-      padding: 13px;
-      font-family: 'Syne', sans-serif;
-      font-size: 1rem; font-weight: 700;
-      cursor: pointer; letter-spacing: .03em;
-      transition: background .2s, transform .1s;
-    }
-    #analyse-btn:disabled { background: #2d3139; color: var(--muted); cursor: not-allowed; }
-    #analyse-btn:not(:disabled):hover { background: #ffc234; transform: translateY(-1px); }
-    #analyse-btn:not(:disabled):active { transform: translateY(0); }
+      .service-card h4 {
+        font-size: 0.9rem;
+        font-weight: 600;
+        color: #000;
+      }
+      .service-card p {
+        font-size: 0.75rem;
+        color: #444;
+        line-height: 1.25;
+      }
+      .icon-emoji {
+        font-size: 1.8rem;
+        margin-bottom: 4px;
+      }
+      .coming-soon {
+        background: var(--primary);
+        color: white;
+        font-size: 0.6rem;
+        padding: 2px 8px;
+        border-radius: 10px;
+        align-self: flex-start;
+        margin-top: 4px;
+        font-weight: 500;
+      }
 
-    /* ── Spinner ── */
-    #spinner { display: none; padding: 28px; text-align: center; }
-    .spin {
-      width: 32px; height: 32px;
-      border: 3px solid var(--border);
-      border-top-color: var(--amber);
-      border-radius: 50%;
-      animation: spin .7s linear infinite;
-      margin: 0 auto 10px;
-    }
-    #spinner p { font-size: .85rem; color: var(--muted); }
+      /* FAB & Nav */
+      .fab {
+        position: fixed;
+        bottom: 80px;
+        background: var(--primary);
+        color: white;
+        padding: 12px 24px;
+        border-radius: 30px;
+        font-weight: 500;
+        box-shadow: 0 4px 12px rgba(43, 69, 112, 0.3);
+        transform: translateX(-50%);
+        left: 50%;
+        width: 140px;
+        text-align: center;
+        z-index: 10;
+        cursor: pointer;
+      }
+      .bottom-nav {
+        position: absolute;
+        bottom: 0;
+        width: 100%;
+        height: 60px;
+        background: white;
+        border-top: 1px solid #f0f0f0;
+        display: flex;
+        justify-content: space-around;
+        align-items: center;
+      }
+      .nav-item {
+        color: #aaa;
+        font-size: 0.75rem;
+        font-weight: 500;
+        text-align: center;
+      }
+      .nav-item.active {
+        color: var(--primary);
+      }
+      .nav-icon {
+        font-size: 1.2rem;
+        display: block;
+        margin-bottom: 2px;
+      }
 
-    /* ── Error ── */
-    #error-msg {
-      display: none;
-      margin: 16px 24px;
-      padding: 12px 16px;
-      background: rgba(248,81,73,.1);
-      border: 1px solid rgba(248,81,73,.3);
-      border-radius: 9px;
-      font-size: .85rem; color: var(--red);
-    }
+      /* Modal for Rescue Platform */
+      #rescue-modal {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: rgba(0, 0, 0, 0.6);
+        z-index: 100;
+        display: none;
+        justify-content: center;
+        align-items: flex-end;
+      }
+      .modal-content {
+        background: white;
+        width: 100%;
+        max-width: 414px;
+        height: 90vh;
+        border-radius: 20px 20px 0 0;
+        padding: 24px;
+        display: flex;
+        flex-direction: column;
+        overflow-y: auto;
+        animation: slideUp 0.3s ease-out;
+      }
+      @keyframes slideUp {
+        from {
+          transform: translateY(100%);
+        }
+        to {
+          transform: translateY(0);
+        }
+      }
 
-    /* ── Result panels ── */
-    .result-section {
-      padding: 24px 24px 0;
-      display: none;
-      animation: fadeUp .4s ease both;
-    }
-    .result-section:last-of-type { padding-bottom: 28px; }
+      .modal-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 20px;
+      }
+      .modal-header h3 {
+        font-size: 1.2rem;
+        font-weight: 700;
+      }
+      .close-btn {
+        background: #eee;
+        border: none;
+        padding: 6px 12px;
+        border-radius: 12px;
+        font-weight: 500;
+        cursor: pointer;
+      }
 
-    .section-header {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      margin-bottom: 16px;
-    }
-    .section-step {
-      width: 26px; height: 26px;
-      border-radius: 50%;
-      background: rgba(240,165,0,.15);
-      border: 1px solid rgba(240,165,0,.4);
-      font-size: .72rem;
-      font-weight: 700;
-      color: var(--amber);
-      display: flex; align-items: center; justify-content: center;
-      flex-shrink: 0;
-    }
-    .section-title {
-      font-size: .72rem;
-      color: var(--muted);
-      text-transform: uppercase;
-      letter-spacing: .08em;
-    }
+      #drop-zone {
+        border: 2px dashed #ccc;
+        border-radius: 12px;
+        padding: 30px 20px;
+        text-align: center;
+        cursor: pointer;
+        background: #fafbfc;
+        position: relative;
+        margin-bottom: 20px;
+      }
+      #drop-zone input {
+        position: absolute;
+        inset: 0;
+        opacity: 0;
+        cursor: pointer;
+      }
+      .upload-icon {
+        font-size: 2rem;
+        display: block;
+        margin-bottom: 8px;
+      }
 
-    .result-animal-row {
-      display: flex;
-      align-items: center;
-      gap: 12px;
-      margin-bottom: 4px;
-    }
-    .result-animal-name {
-      font-family: 'Syne', sans-serif;
-      font-size: 2rem;
-      font-weight: 800;
-      color: var(--amber);
-      text-transform: capitalize;
-    }
-    .result-emoji { font-size: 1.8rem; }
-    .confidence-row { font-size: .88rem; color: var(--muted); margin-bottom: 20px; }
-    .confidence-row span { color: var(--green); font-weight: 500; }
+      #preview-wrap {
+        display: none;
+        position: relative;
+        margin-bottom: 20px;
+        border-radius: 12px;
+        overflow: hidden;
+      }
+      #preview-img {
+        width: 100%;
+        max-height: 200px;
+        object-fit: cover;
+        display: block;
+      }
+      #change-btn {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        background: rgba(0, 0, 0, 0.7);
+        color: white;
+        border: none;
+        padding: 6px 12px;
+        border-radius: 8px;
+        font-size: 0.8rem;
+        cursor: pointer;
+      }
 
-    /* disease name — healthy vs sick */
-    .disease-name {
-      font-family: 'Syne', sans-serif;
-      font-size: 1.7rem;
-      font-weight: 800;
-      text-transform: capitalize;
-      margin-bottom: 4px;
-    }
-    .disease-name.healthy { color: var(--green); }
-    .disease-name.sick    { color: var(--red); }
+      .info-row {
+        display: flex;
+        gap: 10px;
+        margin-bottom: 20px;
+      }
+      .btn-action {
+        flex: 1;
+        background: #e8f0fe;
+        color: #1a73e8;
+        border: none;
+        padding: 12px;
+        border-radius: 12px;
+        font-weight: 500;
+        font-size: 0.9rem;
+        cursor: pointer;
+      }
+      .btn-primary {
+        width: 100%;
+        background: #fbbf24;
+        color: #78350f;
+        border: none;
+        padding: 14px;
+        border-radius: 12px;
+        font-weight: 700;
+        font-size: 1rem;
+        cursor: pointer;
+        margin-bottom: 16px;
+      }
+      .btn-primary:disabled {
+        opacity: 0.5;
+      }
 
-    /* ── Divider between sections ── */
-    .section-divider {
-      height: 1px;
-      background: var(--border);
-      margin: 20px 24px 0;
-      display: none;
-    }
+      .result-section {
+        display: none;
+        padding: 16px;
+        background: #fdfdfd;
+        border: 1px solid #eee;
+        border-radius: 12px;
+        margin-bottom: 12px;
+      }
+      .res-label {
+        font-size: 0.75rem;
+        color: #777;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+        margin-bottom: 4px;
+      }
+      .res-value {
+        font-size: 1.3rem;
+        font-weight: 700;
+        text-transform: capitalize;
+        color: #2b4570;
+      }
+      .healthy {
+        color: #16a34a;
+      }
+      .sick {
+        color: #dc2626;
+      }
 
-    /* ── Breakdown bars ── */
-    .breakdown { margin-top: 8px; }
-    .breakdown-title {
-      font-size: .72rem; color: var(--muted);
-      text-transform: uppercase; letter-spacing: .08em;
-      margin-bottom: 12px;
-    }
-    .bar-row { display: flex; align-items: center; gap: 12px; margin-bottom: 10px; }
-    .bar-label { min-width: 120px; font-size: .78rem; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-    .bar-track { flex: 1; height: 6px; background: var(--border); border-radius: 99px; overflow: hidden; }
-    .bar-fill { height: 100%; border-radius: 99px; background: var(--amber-dim); transition: width .8s cubic-bezier(.4,0,.2,1); }
-    .bar-fill.top-animal  { background: var(--amber); }
-    .bar-fill.top-healthy { background: var(--green); }
-    .bar-fill.top-sick    { background: var(--red); }
-    .bar-pct { width: 44px; text-align: right; font-size: .78rem; color: var(--muted); }
+      .status-panel {
+        background: #f0f9ff;
+        border: 1px solid #bae6fd;
+        padding: 16px;
+        border-radius: 12px;
+        margin-top: 10px;
+        display: none;
+      }
+      .status-panel h4 {
+        margin-bottom: 12px;
+        font-size: 1rem;
+        color: #0369a1;
+      }
+      .status-row {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 8px;
+        font-size: 0.9rem;
+      }
+      .badge-no {
+        color: #b91c1c;
+        font-weight: 600;
+      }
+      .badge-pending {
+        color: #d97706;
+        font-weight: 600;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="app-container">
+      <div class="status-bar">
+        <span>🐾 Vaccinated</span>
+        <span>💧 Needing Help</span>
+      </div>
 
-    /* ── Health badge ── */
-    .health-badge {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      padding: 4px 12px;
-      border-radius: 999px;
-      font-size: .78rem;
-      font-weight: 600;
-      letter-spacing: .04em;
-      margin-bottom: 6px;
-    }
-    .health-badge.healthy { background: rgba(63,185,80,.12); border: 1px solid rgba(63,185,80,.3); color: var(--green); }
-    .health-badge.sick    { background: rgba(248,81,73,.12); border: 1px solid rgba(248,81,73,.3); color: var(--red); }
+      <div class="section-header">
+        <h2>Your Strays</h2>
+        <span class="see-all">See All &gt;</span>
+      </div>
 
-    /* ── Footer ── */
-    footer { margin-top: 36px; font-size: .78rem; color: #3c434d; }
-
-    /* ── Animations ── */
-    @keyframes fadeDown { from { opacity:0; transform:translateY(-18px); } to { opacity:1; transform:translateY(0); } }
-    @keyframes fadeUp   { from { opacity:0; transform:translateY(16px);  } to { opacity:1; transform:translateY(0); } }
-    @keyframes spin     { to { transform: rotate(360deg); } }
-  </style>
-</head>
-<body>
-
-<header>
-  <div class="logo-pill">🐾 Stray-Aid</div>
-  <h1>Animal <span>Detector</span></h1>
-  <p class="subtitle">Upload a photo — identify the animal &amp; detect possible diseases.</p>
-</header>
-
-<div class="card">
-
-  <!-- Drop zone -->
-  <div id="drop-zone">
-    <input type="file" id="file-input" accept="image/*" />
-    <span class="upload-icon">📷</span>
-    <p><strong>Click to upload</strong> or drag &amp; drop</p>
-    <p class="file-types">JPG · PNG · WEBP · up to 10 MB</p>
-  </div>
-
-  <!-- Preview -->
-  <div id="preview-wrap">
-    <img id="preview-img" alt="Preview" />
-    <button id="change-btn">✕ Change</button>
-  </div>
-
-  <!-- Analyse button -->
-  <div class="btn-row">
-    <button id="analyse-btn" disabled>Analyse Image</button>
-  </div>
-
-  <!-- Spinner -->
-  <div id="spinner">
-    <div class="spin"></div>
-    <p id="spinner-msg">Detecting animal…</p>
-  </div>
-
-  <!-- Error -->
-  <div id="error-msg"></div>
-
-  <!-- ── Step 1: Animal result ── -->
-  <div class="result-section" id="animal-panel">
-    <div class="section-header">
-      <div class="section-step">1</div>
-      <span class="section-title">Animal identified</span>
+      <div id="reported-list">
+    <div class="stray-card" onclick="openDetailsModal('Dog', 'Reported (Unknown)', '🐶', true)" style="cursor:pointer;">
+      <div class="stray-logo-wrapper">
+        <div style="font-size:2rem;">🐶</div>
+      </div>
+      <div class="stray-info">
+        <h3>Rocco</h3>
+        <span class="stray-badge">Reported</span>
+      </div>
     </div>
-    <div class="result-animal-row">
-      <span class="result-emoji" id="res-emoji"></span>
-      <span class="result-animal-name" id="res-animal"></span>
+  </div>
+      </div>
+
+      <div class="map-section">
+        <div class="map-overlay"></div>
+        <button class="nearby-btn">Find Nearby Strays &gt;</button>
+      </div>
+
+      <div class="section-header">
+        <h2>Our Services</h2>
+      </div>
+
+      <div class="services-grid">
+        <div class="service-card c-pink">
+          <div class="icon-emoji">🔍</div>
+          <h4>Lost & Found</h4>
+          <p>Help strays reunite with care</p>
+          <span class="coming-soon">Coming soon</span>
+        </div>
+        <div class="service-card c-yellow" onclick="openRescueModal()">
+          <div class="icon-emoji">👐</div>
+          <h4>Rescue</h4>
+          <p>Be the hero they need</p>
+        </div>
+        <div class="service-card c-blue">
+          <div class="icon-emoji">💙</div>
+          <h4>Medical Help</h4>
+          <p>Smart care, anytime with Paw AI</p>
+          <span class="coming-soon">Coming soon</span>
+        </div>
+        <div class="service-card c-purple">
+          <div class="icon-emoji">👥</div>
+          <h4>Community</h4>
+          <p>Join hands, save more lives</p>
+          <span class="coming-soon">Coming soon</span>
+        </div>
+        <div class="service-card c-pink">
+          <div class="icon-emoji">👨‍⚕️</div>
+          <h4>Consult Vet</h4>
+          <p>Expert advice for every paw</p>
+          <span class="coming-soon">Coming soon</span>
+        </div>
+        <div class="service-card c-green">
+          <div class="icon-emoji">⚖️</div>
+          <h4>Connect w/ NGOs</h4>
+          <p>Collaborative rescue services</p>
+          <span class="coming-soon">Coming soon</span>
+        </div>
+      </div>
+
+      <div class="fab">+ Add Stray</div>
+
+      <div class="bottom-nav">
+        <div class="nav-item active"><span class="nav-icon">🏠</span>Home</div>
+        <div class="nav-item"><span class="nav-icon">🩹</span>Lost & Found</div>
+        
+        <div class="nav-item"><span class="nav-icon">🐾</span>Strays</div>
+        <div class="nav-item"><span class="nav-icon">⚙️</span>Settings</div>
+      </div>
     </div>
-    <p class="confidence-row">Confidence: <span id="res-animal-conf"></span>%</p>
-    <div class="breakdown">
-      <p class="breakdown-title">Animal probabilities</p>
-      <div id="animal-bar-container"></div>
+
+    <!-- Rescue Actions Modal -->
+    <div id="rescue-modal">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h3>Rescue Animal</h3>
+          <button class="close-btn" onclick="closeRescueModal()">Cancel</button>
+        </div>
+
+        <!-- Drop zone -->
+        <div id="drop-zone">
+          <input type="file" id="file-input" accept="image/*" />
+          <span class="upload-icon">📷</span>
+          <p><strong>Tap to upload photo</strong></p>
+          <p style="font-size: 0.75rem; color: #888; margin-top: 4px">
+            JPG, PNG (Required for AI detection)
+          </p>
+        </div>
+
+        <!-- Preview -->
+        <div id="preview-wrap">
+          <img id="preview-img" alt="Preview" />
+          <button id="change-btn">✕ Change</button>
+        </div>
+
+        <!-- Location -->
+        <div class="info-row">
+          <button class="btn-action" id="loc-btn" onclick="getLocation()">
+            📍 Get Location
+          </button>
+          <div
+            style="
+              flex: 2;
+              font-size: 0.8rem;
+              display: flex;
+              align-items: center;
+              color: #555;
+            "
+            id="loc-text"
+          >
+            Location not provided
+          </div>
+        </div>
+
+        <!-- Submit -->
+        <button class="btn-primary" id="analyse-btn" disabled>
+          Identify & Report
+        </button>
+
+        <div id="spinner" style="display: none; color: #777; font-size: 0.9rem">
+          Processing Image...
+        </div>
+
+        <!-- AI Results -->
+    <div class="result-section" id="res-panels">
+      <div class="res-label">Animal Type</div>
+      <div class="res-value" id="type-text">Unknown</div>
+      
+      <div style="height:12px;"></div>
+      
+      <div class="res-label">Infection / Disease</div>
+      <div class="res-value" id="disease-text">None</div>
+    </div>
+
+    <!-- Send action (appears after identifying) -->
+    <button class="btn-primary" id="send-report-btn" style="display:none; margin-top:16px; background:#10b981; color:white; font-size: 1rem; border:none; padding:14px; border-radius:12px; font-weight:700; width:100%; cursor:pointer;">Send Report</button>
+
+    <!-- Rescue Status (appears after processing) -->
+        <div class="status-panel" id="status-panel">
+          <h4>Animal Status Tracker</h4>
+          <div class="status-row">
+            <span>Rescued?</span>
+            <span class="badge-no">No</span>
+          </div>
+          <div class="status-row">
+            <span>Treatment Started?</span>
+            <span class="badge-pending">Pending Rescue</span>
+          </div>
+          <div class="status-row">
+            <span>Location Sent?</span>
+            <span style="color: #15803d; font-weight: 600" id="loc-status"
+              >Yes</span
+            >
+          </div>
+        </div>
+      </div>
+    </div>
+
+<!-- Details Modal -->
+<div id="details-modal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.6); z-index:200; justify-content:center; align-items:flex-end;">
+  <div class="modal-content" style="height:auto; min-height:50vh;">
+    <div class="modal-header">
+      <h3>Animal Details</h3>
+      <button class="close-btn" onclick="document.getElementById('details-modal').style.display='none'">Close</button>
+    </div>
+    
+    <div style="text-align:center; margin-bottom:20px;">
+      <div id="detail-emoji" style="font-size:4rem; margin-bottom:10px;">🐶</div>
+      <h2 id="detail-animal" style="text-transform:capitalize; color:#2b4570;">Dog</h2>
+      <p id="detail-disease" style="font-weight:600; color:#dc2626; margin-top:4px;">Disease</p>
+    </div>
+
+    <div class="status-panel" style="display:block;">
+      <h4>Animal Status Tracker</h4>
+      <div class="status-row">
+        <span>Rescued?</span>
+        <span class="badge-no">No</span>
+      </div>
+      <div class="status-row">
+        <span>Treatment Started?</span>
+        <span class="badge-pending">Pending Rescue</span>
+      </div>
+      <div class="status-row">
+        <span>Location Sent?</span>
+        <span id="detail-loc-status" style="color:#15803d; font-weight:600;">Yes</span>
+      </div>
     </div>
   </div>
-
-  <!-- Divider -->
-  <div class="section-divider" id="divider"></div>
-
-  <!-- ── Step 2: Disease result ── -->
-  <div class="result-section" id="disease-panel">
-    <div class="section-header">
-      <div class="section-step">2</div>
-      <span class="section-title">Disease screening</span>
-    </div>
-    <div class="health-badge" id="health-badge"></div>
-    <div class="disease-name" id="res-disease"></div>
-    <p class="confidence-row">Confidence: <span id="res-disease-conf"></span>%</p>
-    <div class="breakdown">
-      <p class="breakdown-title">Disease probabilities</p>
-      <div id="disease-bar-container"></div>
-    </div>
-  </div>
-
 </div>
 
-<footer>Stray-Aid · Local inference · No data stored</footer>
-
-<script>
-  const dropZone    = document.getElementById('drop-zone');
-  const fileInput   = document.getElementById('file-input');
-  const previewWrap = document.getElementById('preview-wrap');
-  const previewImg  = document.getElementById('preview-img');
-  const changeBtn   = document.getElementById('change-btn');
-  const analyseBtn  = document.getElementById('analyse-btn');
-  const spinner     = document.getElementById('spinner');
-  const spinnerMsg  = document.getElementById('spinner-msg');
-  const errorMsg    = document.getElementById('error-msg');
-
-  const EMOJIS = { cat: '🐱', dog: '🐶', cow: '🐄' };
+    <script>
+      // Modal Logic
+      const modal = document.getElementById("rescue-modal");
+      const dropZone = document.getElementById("drop-zone");
+      const fileInput = document.getElementById("file-input");
+      const previewWrap = document.getElementById("preview-wrap");
+      const previewImg = document.getElementById('preview-img');
+  const changeBtn = document.getElementById('change-btn');
+  const analyseBtn = document.getElementById('analyse-btn');
+  const locText = document.getElementById('loc-text');
+  const sendReportBtn = document.getElementById('send-report-btn');
+  const reportedList = document.getElementById('reported-list');
 
   let currentFile = null;
+  let hasLocation = false;
+  let lastReportData = {};
+  const EMOJIS = { cat: '🐱', dog: '🐶', cow: '🐄' };
 
-  fileInput.addEventListener('change', e => handleFile(e.target.files[0]));
+  function openDetailsModal(animal, disease, emoji, locSaved) {
+    document.getElementById('detail-animal').textContent = animal;
+    document.getElementById('detail-disease').textContent = disease;
+    document.getElementById('detail-emoji').textContent = emoji;
+    document.getElementById('detail-loc-status').textContent = locSaved ? 'Yes' : 'No';
+    document.getElementById('details-modal').style.display = 'flex';
+  }
 
-  dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('drag-over'); });
-  dropZone.addEventListener('dragleave', () => dropZone.classList.remove('drag-over'));
-  dropZone.addEventListener('drop', e => {
-    e.preventDefault();
-    dropZone.classList.remove('drag-over');
-    if (e.dataTransfer.files[0]) handleFile(e.dataTransfer.files[0]);
-  });
+      function openRescueModal() {
+        modal.style.display = "flex";
+      }
+      function closeRescueModal() {
+        modal.style.display = "none";
+        resetForm();
+      }
 
-  changeBtn.addEventListener('click', () => {
+      function resetForm() {
+    currentFile = null;
+    fileInput.value = '';
     previewWrap.style.display = 'none';
-    dropZone.style.display    = 'block';
-    analyseBtn.disabled       = true;
-    currentFile               = null;
-    fileInput.value           = '';
-    hideResults();
-  });
-
-  function handleFile(file) {
-    if (!file || !file.type.startsWith('image/')) return;
-    currentFile = file;
-    previewImg.src            = URL.createObjectURL(file);
-    dropZone.style.display    = 'none';
-    previewWrap.style.display = 'block';
-    analyseBtn.disabled       = false;
-    hideResults();
+    dropZone.style.display = 'block';
+    analyseBtn.disabled = true;
+    document.getElementById('res-panels').style.display = 'none';
+    document.getElementById('status-panel').style.display = 'none';
+    sendReportBtn.style.display = 'none';
   }
 
-  analyseBtn.addEventListener('click', async () => {
-    if (!currentFile) return;
-    hideResults();
-    spinner.style.display = 'block';
-    spinnerMsg.textContent = 'Detecting animal…';
-    analyseBtn.disabled   = true;
+      // Location logic
+      function getLocation() {
+        locText.textContent = "Fetching...";
+        if (navigator.geolocation) {
+          navigator.geolocation.getCurrentPosition(
+            (pos) => {
+              hasLocation = true;
+              locText.textContent = `Lat: ${pos.coords.latitude.toFixed(4)}, Lng: ${pos.coords.longitude.toFixed(4)}`;
+            },
+            (err) => {
+              locText.textContent = "Access denied / Error";
+            },
+          );
+        } else {
+          locText.textContent = "Not supported";
+        }
+      }
 
-    const fd = new FormData();
-    fd.append('file', currentFile);
-
-    try {
-      const res  = await fetch('/predict', { method: 'POST', body: fd });
-      const data = await res.json();
-
-      if (data.error) throw new Error(data.error);
-
-      spinnerMsg.textContent = 'Running disease model…';
-      // Small pause so spinner message is visible
-      await new Promise(r => setTimeout(r, 300));
-
-      showResults(data);
-    } catch (err) {
-      errorMsg.textContent   = '⚠ ' + err.message;
-      errorMsg.style.display = 'block';
-    } finally {
-      spinner.style.display = 'none';
-      analyseBtn.disabled   = false;
-    }
-  });
-
-  function showResults(data) {
-    // ── Animal panel ──
-    document.getElementById('res-emoji').textContent      = EMOJIS[data.animal] || '🐾';
-    document.getElementById('res-animal').textContent     = data.animal;
-    document.getElementById('res-animal-conf').textContent = data.animal_confidence;
-
-    buildBars('animal-bar-container', data.animal_breakdown, 'top-animal');
-    document.getElementById('animal-panel').style.display = 'block';
-
-    // ── Disease panel ──
-    if (data.disease) {
-      const d = data.disease;
-      const badge   = document.getElementById('health-badge');
-      const nameEl  = document.getElementById('res-disease');
-
-      badge.textContent = d.is_healthy ? '✓ Healthy' : '⚠ Disease Detected';
-      badge.className   = 'health-badge ' + (d.is_healthy ? 'healthy' : 'sick');
-
-      nameEl.textContent = d.disease;
-      nameEl.className   = 'disease-name ' + (d.is_healthy ? 'healthy' : 'sick');
-
-      document.getElementById('res-disease-conf').textContent = d.confidence;
-
-      const topClass = d.is_healthy ? 'top-healthy' : 'top-sick';
-      buildBars('disease-bar-container', d.breakdown, topClass);
-
-      document.getElementById('divider').style.display      = 'block';
-      document.getElementById('disease-panel').style.display = 'block';
-    }
-  }
-
-  function buildBars(containerId, breakdown, topClass) {
-    const container = document.getElementById(containerId);
-    container.innerHTML = '';
-    const sorted = Object.entries(breakdown).sort((a, b) => b[1] - a[1]);
-    sorted.forEach(([label, pct], i) => {
-      const row = document.createElement('div');
-      row.className = 'bar-row';
-      row.innerHTML = `
-        <span class="bar-label" title="${label}">${label}</span>
-        <div class="bar-track">
-          <div class="bar-fill ${i === 0 ? topClass : ''}" style="width:0%" data-pct="${pct}"></div>
-        </div>
-        <span class="bar-pct">${pct}%</span>`;
-      container.appendChild(row);
-    });
-
-    requestAnimationFrame(() => {
-      container.querySelectorAll('.bar-fill').forEach(el => {
-        el.style.width = el.dataset.pct + '%';
+      // File logic
+      fileInput.addEventListener("change", (e) => {
+        if (e.target.files[0]) handleFile(e.target.files[0]);
       });
-    });
-  }
 
-  function hideResults() {
-    ['animal-panel', 'disease-panel', 'divider'].forEach(id => {
-      document.getElementById(id).style.display = 'none';
-    });
-    errorMsg.style.display = 'none';
-  }
-</script>
-</body>
+      changeBtn.addEventListener("click", resetForm);
+
+      function handleFile(file) {
+        if (!file || !file.type.startsWith("image/")) return;
+        currentFile = file;
+        previewImg.src = URL.createObjectURL(file);
+        dropZone.style.display = "none";
+        previewWrap.style.display = "block";
+        analyseBtn.disabled = false;
+      }
+
+      // Analyse and Submit logic
+      analyseBtn.addEventListener("click", async () => {
+        if (!currentFile) return;
+
+        document.getElementById('res-panels').style.display = 'none';
+    document.getElementById('status-panel').style.display = 'none';
+    sendReportBtn.style.display = 'none';
+    
+    document.getElementById('spinner').style.display = 'block';
+        analyseBtn.disabled = true;
+
+        const fd = new FormData();
+        fd.append("file", currentFile);
+
+        try {
+          // Connect to existing /predict backend API
+          const res = await fetch("/predict", { method: "POST", body: fd });
+          const data = await res.json();
+          if (data.error) throw new Error(data.error);
+
+          // Data format expects data.animal and data.disease
+          document.getElementById("type-text").textContent =
+            data.animal || "Unknown";
+
+          const dEl = document.getElementById("disease-text");
+          if (data.disease) {
+            dEl.textContent = data.disease.disease;
+            dEl.className =
+              "res-value " + (data.disease.is_healthy ? "healthy" : "sick");
+          } else {
+            dEl.textContent = "No data";
+          }
+
+          document.getElementById('loc-status').textContent = hasLocation ? 'Yes' : 'No (Location missing)';
+
+      document.getElementById('res-panels').style.display = 'block';
+      sendReportBtn.style.display = 'block';
+      
+      lastReportData = {
+         animal: data.animal || 'Unknown',
+         disease: data.disease ? data.disease.disease : 'No data',
+         emoji: EMOJIS[(data.animal || '').toLowerCase()] || '🐾'
+      };
+
+    } catch(err) {
+          alert("Error: " + err.message);
+        } finally {
+          document.getElementById("spinner").style.display = "none";
+          analyseBtn.disabled = false;
+        }
+      });
+      sendReportBtn.addEventListener('click', () => {
+    sendReportBtn.style.display = 'none';
+    document.getElementById('status-panel').style.display = 'block';
+    
+    const newCard = document.createElement('div');
+    newCard.className = 'stray-card';
+    newCard.style.borderLeft = '6px solid #10b981';
+    newCard.style.cursor = 'pointer';
+    newCard.innerHTML = `
+      <div class="stray-logo-wrapper">
+        <div style="font-size:2rem;">${lastReportData.emoji}</div>
+      </div>
+      <div class="stray-info">
+        <h3 style="text-transform:capitalize;">${lastReportData.animal}</h3>
+        <span class="stray-badge" style="background:#10b981;">Reported: ${lastReportData.disease}</span>
+      </div>
+    `;
+
+    const animalCopy = lastReportData.animal;
+    const diseaseCopy = lastReportData.disease;
+    const emojiCopy = lastReportData.emoji;
+    const locCopy = hasLocation;
+    
+    newCard.onclick = () => openDetailsModal(animalCopy, diseaseCopy, emojiCopy, locCopy);
+
+    reportedList.insertBefore(newCard, reportedList.firstChild);
+  });
+    </script>
+  </body>
 </html>
