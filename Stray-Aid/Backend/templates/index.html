@@ -741,7 +741,7 @@
         fd.append("file", currentFile);
 
         try {
-          // Connect to existing /predict backend API
+          // Connect to existing /predict backend API.
           const res = await fetch("/predict", { method: "POST", body: fd });
           const data = await res.json();
           if (data.error) throw new Error(data.error);
@@ -807,3 +807,4 @@
     </script>
   </body>
 </html>
+ 
