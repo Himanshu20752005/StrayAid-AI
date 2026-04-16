@@ -19,31 +19,31 @@ DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 # Disease class labels — alphabetical order (matches Keras flow_from_directory indexing)
 DISEASE_CLASSES = {
     "cat": [
-        "Dental Disease",        # dental_disease_in_cat
-        "Ear Mites",             # ear_mites_in_cat
-        "Eye Infection",         # eye_infection_in_cat
-        "Feline Leukemia",       # feline_leukemia
-        "Feline Panleukopenia",  # feline_panleukopenia
-        "Fungal Infection",      # fungal_infection_in_cat
-        "Healthy",               # healthy
-        "Ringworm",              # ringworm_in_cat
-        "Scabies",               # scabies_in_cat
-        "Skin Allergy",          # skin_allergy_in_cat
-        "Urinary Tract Infection", # urinary_tract_infection_in_cat
-        "Worm Infection",        # worm_infection_in_cat
+        "Dental Disease",
+        "Ear Mites",
+        "Eye Infection",
+        "Feline Leukemia",
+        "Feline Panleukopenia",
+        "Fungal Infection",
+        "Healthy",
+        "Ringworm",
+        "Scabies",
+        "Skin Allergy",
+        "Urinary Tract Infection",
+        "Worm Infection",
     ],
     "cow": [
-        "Foot and Mouth Disease", # foot_and_mouth
-        "Healthy",                # healthy
-        "Lumpy Skin Disease",     # lumpy
+        "Foot and Mouth Disease",
+        "Healthy",
+        "Lumpy Skin Disease",
     ],
     "dog": [
-        "Demodicosis",      # demodicosis
-        "Dermatitis",       # Dermatitis
-        "Fungal Infection", # Fungal_infections
-        "Healthy",          # Healthy
-        "Hypersensitivity", # Hypersensitivity
-        "Ringworm",         # ringworm
+        "Demodicosis",
+        "Dermatitis",
+        "Fungal Infection",
+        "Healthy",
+        "Hypersensitivity",
+        "Ringworm",
     ],
 }
 
@@ -53,7 +53,7 @@ DISEASE_MODEL_PATHS = {
     "dog": "models/best_model_Dog.keras",
 }
 
-# ── Load animal classifier (lazy) ────────────────────────────
+# ── Lazy-load animal classifier ────────────────────────────────
 _animal_model = None
 
 def get_animal_model():
@@ -71,7 +71,7 @@ def get_animal_model():
     print("[OK] Loaded animal classifier")
     return _animal_model
 
-# ── Load disease models (lazy, on first predict) ─────────────
+# ── Lazy-load disease models ───────────────────────────────────
 _disease_models = {}
 
 def get_disease_model(animal):
@@ -98,7 +98,6 @@ animal_transform = transforms.Compose([
 ])
 
 def preprocess_for_disease(image: Image.Image, size=(224, 224)):
-    """Resize & normalise for Keras disease models."""
     img = image.resize(size)
     arr = np.array(img, dtype=np.float32) / 255.0
     return np.expand_dims(arr, axis=0)
@@ -113,7 +112,9 @@ def index():
 def predict():
     animal_model = get_animal_model()
     if animal_model is None:
-        return jsonify({"error": f"Animal model not found. Please place 'animal_model.pth' in the '{os.path.abspath('models')}' folder."}), 503
+        return jsonify({
+            "error": f"Animal model not found. Place 'animal_model.pth' in '{os.path.abspath('models')}'"
+        }), 503
 
     if "file" not in request.files:
         return jsonify({"error": "No file uploaded"}), 400
@@ -128,7 +129,7 @@ def predict():
 
         # ── Step 1: Animal classification ──────────────────────
         tensor = animal_transform(image).unsqueeze(0).to(DEVICE)
-        with torch.no_grad():  # type: ignore[attr-defined]
+        with torch.no_grad():
             outputs = animal_model(tensor)
             probs = torch.softmax(outputs, dim=1)[0]
             top_prob, top_idx = torch.max(probs, 0)
@@ -145,9 +146,8 @@ def predict():
         d_model = get_disease_model(animal)
         if d_model is not None:
             d_labels = DISEASE_CLASSES.get(animal, [])
-
             inp = preprocess_for_disease(image)
-            d_probs = d_model.predict(inp)[0]  # shape: (num_classes,)
+            d_probs = d_model.predict(inp)[0]
 
             top_d_idx = int(np.argmax(d_probs))
             disease_name = d_labels[top_d_idx] if top_d_idx < len(d_labels) else f"Class {top_d_idx}"
@@ -164,7 +164,7 @@ def predict():
                 "is_healthy": disease_name.lower() == "healthy",
             }
 
-        # ── Encode image for preview ────────────────────────────
+        # ── Encode image for response ───────────────────────────
         encoded = base64.b64encode(img_bytes).decode("utf-8")
         mime = file.content_type or "image/jpeg"
 
@@ -182,5 +182,3 @@ def predict():
 
 if __name__ == "__main__":
     app.run(debug=True)
-    
-    # ── END ────────────────────────
